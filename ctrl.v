@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module ctrl#(
     parameter F = 28, // feature
-    parameter B = 8 // bit size
+    parameter B = 8, // bit size
     parameter kx = 3,
     parameter ky = 3
 )(

@@ -3,6 +3,8 @@ https://daechu.tistory.com/9
 
 https://gin-girin-grim.tistory.com/10
 https://devyihyun.tistory.com/30
+https://developer0809.tistory.com/30
+
 
 28*28의 MNIST를 읽어와서 CNN연산으로 확인하기
 signed multiplier > 8bit로 63~-64
