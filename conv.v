@@ -38,15 +38,15 @@ module conv(
     reg        maultDataValid;
     reg        sumDataValid;
     
-    initial begin
-        for(i=0;i<9;i=i+1)begin // this is for discript easier, if not use for loop, we have to write kernel[0] = 1; kernel[1] = 1; ....kernel[8] = 1;
-            kernel[i] = i_weight[i*8+:8];
-        end
-    end
+    // initial begin
+    //     for(i=0;i<9;i=i+1)begin // this is for discript easier, if not use for loop, we have to write kernel[0] = 1; kernel[1] = 1; ....kernel[8] = 1;
+    //         kernel[i] = i_weight[i*8+:8];
+    //     end
+    // end
 
     always@(posedge i_clk)begin
         for(i=0;i<9;i=i+1)begin
-            maultData[i] <= kernel[i] * i_pixel_data[i*8+:8]; // kernel[0] * i_pixel_data[7:0] ...... kernel[8] * i_pixel_data[71:64]
+            maultData[i] <= i_weight[i*8+:8] * i_pixel_data[i*8+:8]; // kernel[0] * i_pixel_data[7:0] ...... kernel[8] * i_pixel_data[71:64]
         end
         maultDataValid <= i_pixel_data_valid;
     end

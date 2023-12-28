@@ -16,44 +16,47 @@
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
-// 
+// 14*14*16 > 7*7*32
+// ctrl 1이랑 유사동작, 근데 살짝 달라지는게 체널정리하고
 //////////////////////////////////////////////////////////////////////////////////
 module conv_L2#(
     parameter F = 14, // feature
     parameter B = 8, // bit size
+    parameter kx = 3,
+    parameter ky = 3,
     parameter ICH = 16, // ch
     parameter OCH = 32 // ch
 )(
     input i_clk,
     input i_rst,
-    input [3*3*B-1:0] i_convloed_data,
-    input i_convloed_valid,
-    input [36863:0] i_weight,// 32*16*9*8(och*ich*#ofWeight*#bits)
-    input [255:0] i_bias,
+    input [ICH*kx*ky*B-1:0] i_convloed_data,
+    input [ICH-1:0] i_convloed_valid,
+    input [OCH*ICH*kx*ky*B-1:0] i_weight,// 32*16*9*8(och*ich*#ofWeight(kernel_size)*#bits)
+    input [OCH*B-1:0] i_bias,
     output [OCH*B-1:0] o_convloed_data,
-    output [31:0] o_convloed_valid
+    output [OCH-1:0] o_convloed_valid
     );
     
     // weight, bias
-    wire [7:0] convoled_data [31:0];//idx == channal
-    wire [31:0] convoled_data_valid;
-    reg [143:0] weight [31:0];
-    integer a;
+    wire [B-1:0] convoled_data [OCH-1:0];//idx == channal
+    wire [OCH-1:0] convoled_data_valid;
+    reg [ICH*kx*ky*B-1:0] weight [OCH-1:0];
+    integer k;
     always@(*)begin
-        for(a=0;a<32;a=a+1)
-            weight[a] = i_weight[1152*a+:1152];
+        for(k=0;k<OCH;k=k+1)
+            weight[k] = i_weight[ICH*kx*ky*B*k+:ICH*kx*ky*B];
     end
 
     genvar i,j;
     generate
-        for(i=0;i<32;i=i+1)begin :Conv1
-            for(j=0;j<16;j=j+1)begin
+        for(i=0;i<OCH;i=i+1)begin :Conv1
+            for(j=0;j<ICH;j=j+1)begin
                 conv conv(
                 .i_clk(axi_clk),
                 .i_pixel_data(i_convloed_data),
-                .i_pixel_data_valid(i_convloed_valid),
-                .i_weight(weight[i][j*72+:72]),
-                .i_bias(i_bias[i*8+:8]),
+                .i_pixel_data_valid(i_convloed_valid[j]),
+                .i_weight(weight[i][j*kx*ky*B+:kx*ky*B]),
+                .i_bias(i_bias[i*B+:B]),
                 .o_convloed_data(convoled_data[i]),
                 .o_convloed_valid(convoled_data_valid[i])
                 );

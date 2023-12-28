@@ -16,19 +16,19 @@
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
-// 
+// 28*28*1 > 14*14*16
 //////////////////////////////////////////////////////////////////////////////////
-module ctrlL1#(
+module ctrl#(
     parameter F = 28, // feature
     parameter B = 8 // bit size
+    parameter kx = 3,
+    parameter ky = 3
 )(
     input i_clk,
     input i_rst,
     input [B-1:0] i_pixel_data,
     input i_pixel_data_valid,
-    input [1151:0] i_weight,
-    input [127:0] i_bias,
-    output reg [3*3*B-1:0] o_pixel_data,
+    output reg [kx*ky*B-1:0] o_pixel_data,
     output o_pixel_data_valid,
     output reg o_intr
 );
@@ -78,7 +78,7 @@ module ctrlL1#(
                         o_intr <= 1'b0;
                 end
                 RD_BUFFER : begin
-                    if(rdCounter == $clog2(F)-1)begin // line buffer switched and so we need to wait 3 buffer filled
+                    if(rdCounter == $clog2(F)-1)begin // wait for three line buffer data toss
                         rdState <= IDEL;
                         rd_line_buffer <= 1'b0;
                         o_intr <= 1'b1;
@@ -88,31 +88,31 @@ module ctrlL1#(
         end
     end
 
-
-
     always@(posedge i_clk)begin
         if(i_rst)
             pixelCounter <= 0;
         else begin
             if(i_pixel_data_valid)
-                pixelCounter <= pixelCounter;
+                pixelCounter <= pixelCounter + 1;
         end
     end
+
 
     always@(*)begin
         lineBufferdataValid = 4'b0;
         lineBufferdataValid[currentWrLineBuffer] = i_pixel_data_valid; // for this, four bits of linebuffervalud gets high
     end
 
-
     always@(posedge i_clk)begin
         if(i_rst)
             currentWrLineBuffer <= 0;
         else begin
-            if(pixelCounter == ($clog2(F)-1) & i_pixel_data_valid)
+            if(pixelCounter == ($clog2(F)-1) & i_pixel_data_valid) // one line is filled, then switch line
                 currentWrLineBuffer <= currentWrLineBuffer + 1;
         end
     end
+
+
 
     always@(*)begin// which line buffer has nessasary data. from here, we have to know where to start read. by using i_rd_data for increasing rd_cnt
         case(currentRdLineBuffer)

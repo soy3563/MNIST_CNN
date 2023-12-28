@@ -14,7 +14,7 @@ module cnn #(
     // output [B-1:0] o_data,
     // input i_data_ready,
     // interrupt
-    // output o_intr,
+    output o_intr,
     output [12543:0] o_convoledData //32*7*7*8
 );
 
@@ -22,7 +22,7 @@ module cnn #(
     wire [3*3*B-1:0] pixel_data_conv1;
     wire pixel_data_conv1_valid;
 
-    wire [3*3*B-1:0] pixel_data_conv2 [15:0];
+    wire [16*3*3*B-1:0] pixel_data_conv2;
     wire [15:0] pixel_data_conv2_valid;
 
     wire [255:0] convoled_data_conv2;
@@ -36,57 +36,56 @@ module cnn #(
     reg [1151:0] conv1_weight;
     reg [255:0] conv2_bias;
     reg [36863:0] conv2_weight;
+
+    wire intr_L1;
+    wire [15:0] intr_L2;
     
     // assign o_data_ready = !axis_prog_full;// if buffer full, it means not ready to get data
 
     // assign valid = i_data_valid[0]
     
-    ctrlL1 L1_ctrl(
+    ctrl L1_ctrl(
         .i_clk(axi_clk),
         .i_rst(!axi_rst_n),
         .i_pixel_data(i_data),
         .i_pixel_data_valid(i_data_valid),
-        .i_weight(conv1_weight),
-        .i_bias(conv1_bias),
         .o_pixel_data(pixel_data_conv1),
         .o_pixel_data_valid(pixel_data_conv1_valid),
-        .o_intr(o_intr)
+        .o_intr(intr_L1)
     );
 
     conv_L1 L1(
         .i_clk(axi_clk),
         .i_pixel_data(pixel_data_conv1),
         .i_pixel_data_valid(pixel_data_conv1_valid),
+        .i_weight(conv1_weight),
+        .i_bias(conv1_bias),
         .o_convloed_data(L1_convoled_data),
         .o_convloed_valid(L1_convoled_data_valid)
     );
 
-    genvar j;//j==L2 channel
-    generate// each channel has line buffer
-        for(j=0;j<16;j=j+1)begin
-            ctrlL2#(
-                .F(14),
-                .B(8))
-                L2_ctrl(
-                .i_clk(axi_clk),
-                .i_rst(!axi_rst_n),
-                .i_pixel_data(L1_convoled_data[j*8+:8]),
-                .i_pixel_data_valid(L1_convoled_data_valid[j]),
-                .i_weight(conv2_weight),
-                .i_bias(conv2_bias),
-                .o_pixel_data(pixel_data_conv2[j]),
-                .o_pixel_data_valid(pixel_data_conv2_valid[j]),
-                .o_intr(o_intr)
-            );
-            conv_L2 L2(
-                .i_clk(axi_clk),
-                .i_convloed_data(pixel_data_conv2[j]),
-                .i_convloed_valid(pixel_data_conv2_valid[j]),
-                .o_convloed_data(convoled_data_conv2),//[32*8-1:0] == [255:0]
-                .o_convloed_valid(convoled_data_conv2_valid)
-            );
-        end
-    endgenerate
+
+    ctrlL2 L2_ctrl(
+        .i_clk(axi_clk),
+        .i_rst(!axi_rst_n),
+        .i_pixel_data(L1_convoled_data),
+        .i_pixel_data_valid(L1_convoled_data_valid),
+        .i_weight(conv2_weight),
+        .i_bias(conv2_bias),
+        .o_pixel_data(pixel_data_conv2),
+        .o_pixel_data_valid(pixel_data_conv2_valid),
+        .o_intr(intr_L2)
+    );
+
+    conv_L2 L2(
+        .i_clk(axi_clk),
+        .i_convloed_data(pixel_data_conv2[j]),
+        .i_convloed_valid(pixel_data_conv2_valid[j]),
+        .o_convloed_data(convoled_data_conv2),//[32*8-1:0] == [255:0]
+        .o_convloed_valid(convoled_data_conv2_valid)
+    );
+
+
 
     reg [$clog2(49)-1:0] outIdx;
     always@(posedge axi_clk)begin
@@ -110,7 +109,8 @@ module cnn #(
 
     assign o_convoledData = outBuff;
     assign o_data_valid = (outIdx=='d48) ? 1 : 0;
-    
+    assign o_intr = intr_L1 ||  (|intr_L2);
+
     initial begin
         conv1_bias[7:0] <= 8'b01111011; //normalized bias=123.0000
         conv1_weight[71:0] <= 72'b10100000_10010011_10000001_10011011_10011001_01100011_01100111_10001100_10000001;
