@@ -16,46 +16,48 @@
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
-// 
+// 28*28*1 > 14*1416
 //////////////////////////////////////////////////////////////////////////////////
 module conv_L1#(
     parameter F = 28, // feature
     parameter B = 8, // bit size
-    parameter ICH = 16, // ch
+    parameter kx = 3, // Kernel_size
+    parameter ky = 3, // Kernel_size
+    parameter ICH = 1,
     parameter OCH = 16 // ch
 )(
     input i_clk,
     input i_rst,
-    input [3*3*B-1:0] i_pixel_data,// 24bit(3pixel) for three line
+    input [kx*ky*B-1:0] i_pixel_data,// 24bit(3pixel) for three line
     input i_pixel_data_valid,
-    input [1151:0] i_weight,
-    input [127:0] i_bias, 
+    input [OCH*kx*ky*B-1:0] i_weight,
+    input [OCH*B-1:0] i_bias, 
     output [OCH*B-1:0] o_convloed_data,
     output [OCH-1:0] o_convloed_valid
     );
     
     // weight, bias
     //reg [7:0] bias [15:0];
-    wire [7:0] convoled_data [15:0];//idx == channal
-    wire [15:0] convoled_data_valid;
+    wire [B-1:0] convoled_data [OCH-1:0];//idx == channal
+    wire [OCH-1:0] convoled_data_valid;
 
-    reg inv; // for stride 2
+    reg stride; // for stride 2
     always@(posedge i_clk)begin
         if(i_rst)
-            inv <= 1;
+            stride <= 1;
         else
-            inv <= ~inv;
+            stride <= ~stride;
     end
 
     genvar i;
     generate
-        for(i=0;i<16;i=i+1)begin : Conv1
+        for(i=0;i<OCH;i=i+1)begin : L1
             conv conv(
             .i_clk(i_clk),
             .i_pixel_data(i_pixel_data),
-            .i_pixel_data_valid(i_pixel_data_valid&inv),
-            .i_weight(i_weight[i*72+:72]),
-            .i_bias(i_bias[i*8+:8]),
+            .i_pixel_data_valid(i_pixel_data_valid&stride),
+            .i_weight(i_weight[i*kx*ky*B+:kx*ky*B]),
+            .i_bias(i_bias[i*B+:B]),
             .o_convloed_data(convoled_data[i]),
             .o_convloed_valid(convoled_data_valid[i])
             );
