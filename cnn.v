@@ -17,8 +17,6 @@ module cnn #(
     output o_intr,
     output [16*B-1:0] o_convoledData //32*7*7*8
 );
-    
-    //reg [] rowCnt
 
     wire [3*3*B-1:0] pixel_data_conv1;
     wire pixel_data_conv1_valid;
@@ -46,11 +44,36 @@ module cnn #(
 
     // assign valid = i_data_valid[0]
     
+    wire [B-1:0] data;
+    assign data = intrCnt<=F-3 ? i_data : 'b0;
+    wire inputValid;
+    wire paddingValid;
+    assign inputValid = i_data_valid | paddingValid; // >> 벨리드 28클럭 유지해서 0 두줄 넣도록 하는 부분 추가구현 필요
+
+    reg [$clog2(F)-1:0] intrCnt;
+    always@(posedge axi_clk)begin
+        if(!axi_rst_n | (intrCnt==(F-1)) | (intrCnt==(F-2) & lineCnt==F))
+            intrCnt <= 0;
+        else if(intr_L1)
+            intrCnt <= intrCnt + 1;
+    end
+
+    assign paddingValid = intrCnt>F-4 & lineCnt != F;
+    
+    reg [$clog2(F+1)-1:0] lineCnt;
+    always@(posedge axi_clk)begin
+        if(!axi_rst_n | lineCnt == F)
+            lineCnt <= 0;
+        else if(intrCnt == F-3 | intrCnt == F-2)begin
+            lineCnt <= lineCnt + 1;
+        end
+    end
+
     ctrl L1_ctrl(
         .i_clk(axi_clk),
         .i_rst(!axi_rst_n),
-        .i_pixel_data(i_data),
-        .i_pixel_data_valid(i_data_valid),
+        .i_pixel_data(data),
+        .i_pixel_data_valid(inputValid),
         .o_pixel_data(pixel_data_conv1),
         .o_pixel_data_valid(pixel_data_conv1_valid),
         .o_intr(intr_L1)
