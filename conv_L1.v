@@ -16,7 +16,7 @@
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
-// 28*28*1 > 14*1416
+// 28*28*1 > 14*14*16
 //////////////////////////////////////////////////////////////////////////////////
 module conv_L1#(
     parameter F = 28, // feature
@@ -44,8 +44,8 @@ module conv_L1#(
     reg stride; // for stride 2
     always@(posedge i_clk)begin
         if(i_rst)
-            stride <= 1;
-        else
+            stride <= 0;
+        else if(i_pixel_data_valid)
             stride <= ~stride;
     end
 
@@ -55,11 +55,11 @@ module conv_L1#(
             conv conv(
             .i_clk(i_clk),
             .i_pixel_data(i_pixel_data),
-            .i_pixel_data_valid(i_pixel_data_valid&stride),
+            .i_pixel_data_valid(i_pixel_data_valid),
             .i_weight(i_weight[i*kx*ky*B+:kx*ky*B]),
             .i_bias(i_bias[i*B+:B]),
-            .o_convloed_data(convoled_data[i]),
-            .o_convloed_valid(convoled_data_valid[i])
+            .o_convoled_data(convoled_data[i]),
+            .o_convoled_valid(convoled_data_valid[i])
             );
         end
     endgenerate

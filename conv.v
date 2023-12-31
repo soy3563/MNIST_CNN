@@ -25,14 +25,14 @@ module conv(
     input i_pixel_data_valid,
     input [71:0] i_weight,
     input [7:0] i_bias,
-    output reg [7:0] o_convloed_data,
-    output reg o_convloed_valid
+    output reg [7:0] o_convoled_data,
+    output reg o_convoled_valid
     );
 
     integer i;
-    //reg [width] name [depth]
-    reg [7:0] kernel [8:0]; // nine pixel, each pixel represnents 8bit
-    reg [15:0] maultData[8:0]; // 8bit * 8bit >> 16 bit width
+    // reg [width] name [depth]
+    // reg [7:0] kernel [8:0]; // nine pixel, each pixel represnents 8bit
+    reg [15:0] maultData [8:0]; // 8bit * 8bit >> 16 bit width
     reg [15:0] sumData;
     reg [15:0] sumDataInt;
     reg        maultDataValid;
@@ -43,7 +43,7 @@ module conv(
     //         kernel[i] = i_weight[i*8+:8];
     //     end
     // end
-
+    
     always@(posedge i_clk)begin
         for(i=0;i<9;i=i+1)begin
             maultData[i] <= i_weight[i*8+:8] * i_pixel_data[i*8+:8]; // kernel[0] * i_pixel_data[7:0] ...... kernel[8] * i_pixel_data[71:64]
@@ -70,8 +70,9 @@ module conv(
     end
 
     always@(posedge i_clk)begin
-        o_convloed_data <= addBias[8]==0 ? addBias[7:0] : addBias[8:1];//this will discard fraction part, only takes integer part of dividied val
-        o_convloed_valid <= sumDataValid;
+        //o_convloed_data <= addBias[8]==0 ? addBias[7:0] : addBias[8:1];//this will discard fraction part, only takes integer part of dividied val
+        o_convoled_data <= addBias[15:8];//take MSB
+        o_convoled_valid <= sumDataValid;
     end
 
 endmodule

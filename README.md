@@ -17,6 +17,7 @@ https://colab.research.google.com/drive/1TDNXGhXUclOtrLfN20YUpPfvm8GvMOKh?usp=sh
 
 예상문제 >> BMP 파일은뒤집히는데, 아 생각해보니까 학습을 BMP로 시킨게 아니네. 그니까 저 bmp 읽어와서 뒤집어서 테스트벤치에 넣는 방향으로 연산 진행하면 될 듯하다.
 
+
 630 KB >> B-ram spec
 
 Model: "model"(50FC)

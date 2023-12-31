@@ -19,27 +19,25 @@ module lineBuffer #(
     end
     
     always@(posedge i_clk)begin
-        if(i_rst)
+        if(i_rst | wrPtr == F-1)
             wrPtr <= 'd0;
         else if(i_data_valid)begin
-            if(wrPtr == F)
-                wrPtr <= 'd0;
-            else
-                wrPtr <= wrPtr + 'd1;
+            wrPtr <= wrPtr + 'd1;
         end
     end
     
-    assign o_data = {line[rdPtr], line[rdPtr+1], line[rdPtr+2]}; // it can be made as sequential by one clk delay but like this comb logic, it can prefatching? what is prefatcing?
+    assign o_data = rdPtr<=F-3 ? {line[rdPtr], line[rdPtr+1], line[rdPtr+2]} : 
+                    rdPtr==F-2 ? {line[rdPtr], line[rdPtr+1], 8'h0} :
+                    {line[rdPtr],16'h0};
+                    //this is for zero padding, if we want other mathod, we should change this
+     // it can be made as sequential by one clk delay but like this comb logic, it can prefatching? what is prefatcing?
     // fifo prefatch, by using comb logic our latency will be zero
 
     always@(posedge i_clk)begin
-        if(i_rst)
+        if(i_rst | rdPtr == F-1)
             rdPtr <= 'd0;
         else if(i_rd_data)begin
-            if(rdPtr == F)
-                rdPtr <= 'd0;
-            else
-                rdPtr <= rdPtr + 'd1;
+            rdPtr <= rdPtr + 'd1;
         end
     end
 

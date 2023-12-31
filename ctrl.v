@@ -72,13 +72,14 @@ module ctrl#(
         else begin
             case(rdState)
                 IDEL : begin
-                    if(totalPixelCounter >= 3*F*B) //wait for three line buffer filled
+                    o_intr <= 1'b0;
+                    if(totalPixelCounter >= 3*F)begin //wait for three line buffer filled
                         rd_line_buffer <= 1'b1;
                         rdState <= RD_BUFFER;
-                        o_intr <= 1'b0;
+                    end
                 end
                 RD_BUFFER : begin
-                    if(rdCounter == $clog2(F)-1)begin // wait for three line buffer data toss
+                    if(rdCounter == (F-1))begin // wait for three line buffer data toss
                         rdState <= IDEL;
                         rd_line_buffer <= 1'b0;
                         o_intr <= 1'b1;
@@ -89,7 +90,7 @@ module ctrl#(
     end
 
     always@(posedge i_clk)begin
-        if(i_rst)
+        if(i_rst | (pixelCounter == (F-1)))
             pixelCounter <= 0;
         else begin
             if(i_pixel_data_valid)
@@ -99,7 +100,7 @@ module ctrl#(
 
 
     always@(*)begin
-        lineBufferdataValid = 4'b0;
+        lineBufferdataValid = 4'h0;
         lineBufferdataValid[currentWrLineBuffer] = i_pixel_data_valid; // for this, four bits of linebuffervalud gets high
     end
 
@@ -107,7 +108,7 @@ module ctrl#(
         if(i_rst)
             currentWrLineBuffer <= 0;
         else begin
-            if(pixelCounter == ($clog2(F)-1) & i_pixel_data_valid) // one line is filled, then switch line
+            if((pixelCounter == (F-1)) & i_pixel_data_valid) // one line is filled, then switch line
                 currentWrLineBuffer <= currentWrLineBuffer + 1;
         end
     end
@@ -161,7 +162,7 @@ module ctrl#(
     end
 
     always@(posedge i_clk)begin
-        if(i_rst)
+        if(i_rst | (rdCounter=='d27))
             rdCounter <= 0;
         else begin
             if(rd_line_buffer)
@@ -173,7 +174,7 @@ module ctrl#(
         if(i_rst)
             currentRdLineBuffer <= 0;
         else begin
-            if(rdCounter == ($clog2(F)-1) & rd_line_buffer)
+            if((rdCounter == (F-1)) & rd_line_buffer)
                 currentRdLineBuffer <= currentRdLineBuffer + 1;
         end
     end

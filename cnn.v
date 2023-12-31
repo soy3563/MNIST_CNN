@@ -17,7 +17,8 @@ module cnn #(
     output o_intr,
     output [16*B-1:0] o_convoledData //32*7*7*8
 );
-
+    
+    //reg [] rowCnt
 
     wire [3*3*B-1:0] pixel_data_conv1;
     wire pixel_data_conv1_valid;
@@ -32,7 +33,7 @@ module cnn #(
     wire [16*B-1:0] L1_convoled_data;
     wire [16-1:0] L1_convoled_data_valid;
 
-    reg [127:0] conv1_bias;
+    reg [16*B-1:0] conv1_bias;
     reg [1151:0] conv1_weight;
     //reg [255:0] conv2_bias;
     //reg [36863:0] conv2_weight;
@@ -108,8 +109,8 @@ module cnn #(
     //         outBuff[outIdx*256+:256] <= convoled_data_conv2;
     // end
 
-    // assign o_convoledData = outBuff;
-    // assign o_data_valid = (outIdx=='d48) ? 1 : 0;
+    assign o_convoledData = L1_convoled_data;
+    assign o_data_valid = L1_convoled_data_valid;
     // assign o_intr = intr_L1 ||  (|intr_L2);
 
     initial begin
