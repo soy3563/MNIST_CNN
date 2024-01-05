@@ -5,10 +5,9 @@ https://gin-girin-grim.tistory.com/10
 https://devyihyun.tistory.com/30
 https://developer0809.tistory.com/30
 
-
+L1 > 파이썬으로 돌린 결과랑 내가 돌린거랑 다르다, 원인 불명 >> 일단 L2까지 구현하고 차이 검사하기. 현재 모델 전체 만들기가 시급하다.
 
 630 KB >> B-ram spec
-
 Model: "model"(50FC)
 _________________________________________________________________
  Layer (type)                Output Shape              Param #   

@@ -74,13 +74,13 @@ end
          $fwrite(file,"%32'h",outData);
          $fwrite(file," ");
          recvCnt = recvCnt+1;
-         if(recvCnt%28 == 0)begin
+         if(recvCnt%14 == 0)begin
             $fwrite(file,"\n");
-                if(recvCnt%28 == 0)
+                if(recvCnt%14 == 0)
                     $fwrite(file,"\n");
          end
      end 
-     if(recvCnt == 28*28)begin //14*14*16 this will change to 14*14, for stride
+     if(recvCnt == 14*14)begin //14*14*16 this will change to 14*14, for stride
         $fclose(file);
         $stop;
      end

@@ -81,6 +81,7 @@ module cnn #(
 
     conv_L1 L1(
         .i_clk(axi_clk),
+        .i_rst(!axi_rst_n),
         .i_pixel_data(pixel_data_conv1),
         .i_pixel_data_valid(pixel_data_conv1_valid),
         .i_weight(conv1_weight),

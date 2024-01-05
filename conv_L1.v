@@ -54,8 +54,9 @@ module conv_L1#(
         for(i=0;i<OCH;i=i+1)begin : L1
             conv conv(
             .i_clk(i_clk),
+            .i_rst(i_rst),
             .i_pixel_data(i_pixel_data),
-            .i_pixel_data_valid(i_pixel_data_valid),
+            .i_pixel_data_valid(i_pixel_data_valid & !stride),
             .i_weight(i_weight[i*kx*ky*B+:kx*ky*B]),
             .i_bias(i_bias[i*B+:B]),
             .o_convoled_data(convoled_data[i]),
